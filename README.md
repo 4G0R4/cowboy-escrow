@@ -11,8 +11,8 @@ You'll need to gather this information:
 - [ ] 2. Maker (your) bitcoin onchain address to receive founds back in case something goes wrong
 - [ ] 3. Taker's nostr npub
 - [ ] 4. Taker's bitcoin onchain address
-- [ ] 3. [@AGORA](https://iris.to/agora_sn)'s nostr npub is alredy preset and not editable `npub13kkpytvjcxsqka9pdshw3094urgh8fxwx7ru258lved9wr7f35mspal584`
-- [ ] 4. [@AGORA](https://coinos.io/pay/AGORA)'s bitcoin onchain public address is alredy preset and not editable `bc1qrn8p4sn7hhng95pmvdkpnm4eqx0jv6ql2t98wf`
+- [ ] 3. [@AGORA](https://iris.to/agora_sn)'s nostr npub `npub13kkpytvjcxsqka9pdshw3094urgh8fxwx7ru258lved9wr7f35mspal584`
+- [ ] 4. [@AGORA](https://coinos.io/pay/AGORA)'s bitcoin onchain public address `bc1qrn8p4sn7hhng95pmvdkpnm4eqx0jv6ql2t98wf`
 
 
 ## How it works
