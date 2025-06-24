@@ -1,5 +1,5 @@
-# Celebrity escrow
-Celebrity Escrow is a censorship resistant peer to peer escrow built with bitcoin and nostr. It allows two parties to create an escrow contract, with an impartial third party "celebrity" acting as the escrow.
+# Cowboy escrow
+Cowboy Escrow is a censorship resistant peer to peer escrow built with bitcoin and nostr. It allows two parties to create an escrow contract, with an impartial third party "cowboy" acting as the escrow.
 
 ## Inspiration
 
