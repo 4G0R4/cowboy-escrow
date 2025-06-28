@@ -273,7 +273,7 @@
           // === DISPLAY INSTRUCTIONS TO MAKER ===
           // Show modal with instructions and taker link
           var content = `
-            <p>Share the link below with the taker and wait for their response -- and don't leave this page or they might lose their deposit, just wait for the page to update and tell you what to do next.<br/><small><code>${url + "&role=taker"}</code></small></p>
+            <p>Share the link below with the taker and wait for their response -- and don't leave this page or they might lose their deposit, just wait for the page to update and tell you what to do next.<br/><mark><small><code>${url + "&role=taker"}</code></small></mark></p>
           `;
           showModal( content );
           
@@ -1313,7 +1313,7 @@
           <p>Enter the taker's npub</p>
           <p><input class="mb-6 tpub rounded-md px-3 py-2"></p>
           <p>Enter the escrow's npub
-           <br/><a href='https://iris.to/agora_sn' target='_blank'><small>@AGORA</small></a> <small><code>npub13kkpytvjcxsqka9pdshw3094urgh8fxwx7ru258lved9wr7f35mspal584</code></small></p>
+           <br/><a href='https://iris.to/agora_sn' target='_blank'><small>@AGORA</small></a> <mark><small><code>npub13kkpytvjcxsqka9pdshw3094urgh8fxwx7ru258lved9wr7f35mspal584</code></small></mark></p>
           <p><input class="mb-6 epub rounded-md px-3 py-2"></p>
       </div>
       <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; text-align: center;">
@@ -1566,7 +1566,7 @@
                     $$( '.open_dispute' )[ 1 ].onclick = () => {
                         var url = window.location.protocol + "//" + window.location.hostname + window.location.pathname + "?taker=" + pubKey + "&contract=" + $_GET[ "contract" ] + "&role=escrow&decryption_key=" + $_GET[ "decryption_key" ];
                         if ( $_GET[ "network" ] ) url += "&network=" + $_GET[ "network" ];
-                        var content = `<p>Please send the link below to your escrow and await their reply.<br/><small><coce>${url}</code></small></p>`;
+                        var content = `<p>Please send the link below to your escrow and await their reply.<br/><mark><small><coce>${url}</code></small></mark></p>`;
                         showModal( content );
                     }
                 }
@@ -1736,7 +1736,7 @@
               $$( '.open_dispute' )[ 0 ].onclick = () => {
                   var url = window.location.protocol + "//" + window.location.hostname + window.location.pathname + "?taker=" + $_GET[ "taker" ] + "&contract=" + $_GET[ "contract" ] + "&role=escrow&decryption_key=" + $_GET[ "decryption_key" ];
                   if ( $_GET[ "network" ] ) url += "&network=" + $_GET[ "network" ];
-                  var content = `<p>Please send the link below to your escrow and await their reply.<br/><small><code>${url}</code></small></p>`;
+                  var content = `<p>Please send the link below to your escrow and await their reply.<br/><mark><small><code>${url}</code></small></mark></p>`;
                   showModal( content );
               }
               //previously I (the maker) created a subscription to find the taker's reply to this event
