@@ -19,11 +19,11 @@ You'll need to gather this information:
 
 ## How it works
 
-1. The maker creates a new contract by entering their details, the taker's details, escrow's details, contract terms and stake amounts. They then publish this to the Nostr protocol.
+1. The _Maker_ (can be either the buyer or the seller) creates a new contract by entering their details, the _Taker_'s details, _Escrow_'s details, contract terms and stake amounts. They then publish this to the Nostr protocol.
 
-2. The taker views the contract details and can choose to accept the contract. If they accept, they enter their nsec and sign the contract with their Bitcoin private key. They then publish this acceptance to Nostr, referencing the original contract event.
+2. The _Taker_ views the contract details and can choose to accept or reject the contract. If they accept, they enter their nsec and sign the contract with their Bitcoin private key. They then publish this acceptance to Nostr, referencing the original contract event.
 
-3. If there is a dispute, the escrow can view the contract details and decide on the outcome. They declare either the maker or taker as the winner by publishing to Nostr.
+3. If there is a dispute, the _Escrow_ can view the contract details and decide on the outcome, declaring either the _Maker_ or _Taker_ as the winner by publishing the verdict to Nostr.
 
 4. The contract funds are then released to the winner's Bitcoin address.
 
