@@ -154,61 +154,133 @@
         for (var key of url_keys) $_GET[key] = url_params.get(key);
     </script>
     <script>
-        var mempoolNetwork = ""; //testnet: "testnet/" | signet: "signet/" | mainnet: ""
-        var mempoolnet = "mainnet";
+        // === NETWORK CONFIGURATION ===
+        // Initialize variables for Bitcoin network selection
+        var mempoolNetwork = ""; // URL path for mempool API: testnet: "testnet/" | signet: "signet/" | mainnet: ""
+        var mempoolnet = "mainnet"; // Network identifier for mempool services
+        
+        // Check URL parameter to determine which Bitcoin network to use
         if ( $_GET[ "network" ] == "testnet" ) {
-            mempoolNetwork = "testnet/";
+            mempoolNetwork = "testnet/"; // Use testnet API endpoint
             mempoolnet = "testnet";
         }
         if ( $_GET[ "network" ] == "signet" ) {
-            mempoolNetwork = "signet/";
-            mempoolnet = "testnet"; //this one is identical for testnet and signet
+            mempoolNetwork = "signet/"; // Use signet API endpoint
+            mempoolnet = "testnet"; // Note: signet uses same config as testnet for some services
         }
         if ( $_GET[ "network" ] == "mainnet" ) {
-            mempoolNetwork = "";
+            mempoolNetwork = ""; // Mainnet uses root API path (no prefix)
             mempoolnet = "mainnet";
         }
+        
+        // === AUTO-REDIRECT FOR RETURNING USERS ===
+        // If user has a saved private key and is visiting as "taker" role without providing privkey in URL
         if ( localStorage.privkey && $_GET[ "role" ] == "taker" && !$_GET[ "privkey" ] ) {
+            // Automatically append their saved private key to the URL and redirect
             var url = window.location.href + "&privkey=" + localStorage.privkey;
             window.location.href = url;
         }
-        sessionStorage.removeItem( "maker_npub" );
-        sessionStorage.removeItem( "taker_npub" );
-        sessionStorage.removeItem( "escrow_npub" );
+        
+        // === SESSION CLEANUP ===
+        // Clear any existing session data for participant public keys
+        sessionStorage.removeItem( "maker_npub" );   // Remove maker's nostr public key
+        sessionStorage.removeItem( "taker_npub" );   // Remove taker's nostr public key  
+        sessionStorage.removeItem( "escrow_npub" );  // Remove escrow's nostr public key
+        
+        // === MAIN FUNCTION: CREATE PRE-CONTRACT ===
+        /**
+         * Creates an encrypted contract proposal and broadcasts it via Nostr relay
+         * @param {Object} json - Contract details (participants, amounts, terms, etc.)
+         * @param {string} ephemeral_priv - Temporary private key for encryption (unused parameter)
+         * @returns {string} - URL for taker to join the contract
+         */
         var createPreContract = async (json, ephemeral_priv) => {
+          // Generate a new random private key for this contract session
           var ephemeral_priv = bytesToHex( nobleSecp256k1.utils.randomPrivateKey() );
+          // Derive the corresponding public key (compressed format, remove '02' prefix)
           var ephemeral_pub = nobleSecp256k1.getPublicKey( ephemeral_priv, true ).substring( 2 );
+          // Store the ephemeral private key for later decryption
           sessionStorage.ephemeral_priv = ephemeral_priv;
+          
+          // === CREATE NOSTR EVENT ===
+          // Build a Nostr event containing the encrypted contract details
           var event = {
-              "content"    : encrypt( privKey, ephemeral_pub, JSON.stringify( {maker_sats: json.maker_sats,taker_sats: json.taker_sats,escrow_sats: json.escrow_sats,contract_text: json.contract_text, escrow_pub: json.escrow_pub, maker_pub: json.maker_pub, maker_address: json.maker_address, taker_address: json.taker_address, maker_nym: json.maker_nym, maker_pic: json.maker_pic, taker_nym: json.taker_nym, taker_pic: json.taker_pic, escrow_nym: json.escrow_nym, escrow_pic: json.escrow_pic, mining_fee: json.mining_fee} ) ),
-              "created_at" : Math.floor( Date.now() / 1000 ),
-              "kind"       : 3333,
-              "tags"       : [ [ "p", pubkeyFromNpub( json.maker_pub ) ], [ "p", json.escrow_pub ] ],
-              "pubkey"     : pubKey,
+              // Encrypt all contract data using the maker's private key and ephemeral public key
+              "content"    : encrypt( privKey, ephemeral_pub, JSON.stringify( {
+                  maker_sats: json.maker_sats,       // Bitcoin amount maker is contributing
+                  taker_sats: json.taker_sats,       // Bitcoin amount taker must contribute
+                  escrow_sats: json.escrow_sats,     // Bitcoin amount escrow requires
+                  contract_text: json.contract_text,  // Human-readable contract terms
+                  escrow_pub: json.escrow_pub,       // Escrow's public key
+                  maker_pub: json.maker_pub,         // Maker's public key
+                  maker_address: json.maker_address, // Maker's Bitcoin address
+                  taker_address: json.taker_address, // Taker's Bitcoin address
+                  maker_nym: json.maker_nym,         // Maker's display name
+                  maker_pic: json.maker_pic,         // Maker's profile picture
+                  taker_nym: json.taker_nym,         // Taker's display name
+                  taker_pic: json.taker_pic,         // Taker's profile picture
+                  escrow_nym: json.escrow_nym,       // Escrow's display name
+                  escrow_pic: json.escrow_pic,       // Escrow's profile picture
+                  mining_fee: json.mining_fee        // Bitcoin network fee
+              } ) ),
+              "created_at" : Math.floor( Date.now() / 1000 ), // Unix timestamp
+              "kind"       : 3333,                            // Custom Nostr event type for contracts
+              "tags"       : [                                // Tag recipients for notifications
+                  [ "p", pubkeyFromNpub( json.maker_pub ) ],  // Tag the maker
+                  [ "p", json.escrow_pub ]                    // Tag the escrow
+              ],
+              "pubkey"     : pubKey, // Current user's public key (the one creating the contract)
           }
+          
+          // === SIGN AND BROADCAST EVENT ===
+          // Cryptographically sign the event with maker's private key
           var signedEvent = await getSignedEvent(event, privKey);
           console.log( "event:", signedEvent );
+          
+          // === WEBSOCKET CONNECTION TO NOSTR RELAY ===
+          // Connect to Nostr relay to broadcast the contract
           socket = new WebSocket( relay );
           socket.addEventListener('open', openConnection );
+          
+          // When connection opens, broadcast the contract and subscribe to responses
           socket.addEventListener('open', () => {
+            // Send the signed contract event to the relay
             socket.send(JSON.stringify([ "EVENT", signedEvent ]));
+            
+            // Generate random subscription ID for tracking responses
             var subId   = bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 16 );
-            sessionStorage[ "sub" ] = subId;
-            sessionStorage[ "contract" ] = signedEvent.id;
-            var filter  = { "#e": [ signedEvent.id ] }
+            sessionStorage[ "sub" ] = subId;           // Store subscription ID
+            sessionStorage[ "contract" ] = signedEvent.id; // Store contract event ID
+            
+            // Subscribe to any events that reference this contract (responses from taker/escrow)
+            var filter  = { "#e": [ signedEvent.id ] } // Filter for events tagging this event ID
             var subscription = [ "REQ", subId, filter ];
             socket.send(JSON.stringify( subscription ));
           });
+          
+          // Listen for incoming messages (responses to the contract)
           socket.addEventListener('message', handleMessage);
-          var port = window.location.port ? `:${window.location.port}` : "";
+          
+          // === GENERATE SHAREABLE URLs ===
+          // Build the base URL for sharing with other participants
+          var port = window.location.port ? `:${window.location.port}` : ""; // Include port if present
           var url = window.location.protocol + "//" + window.location.hostname + port + window.location.pathname +
-            `?contract=${signedEvent.id}&decryption_key=${ephemeral_priv}`;
+            `?contract=${signedEvent.id}&decryption_key=${ephemeral_priv}`; // Include contract ID and decryption key
+          
+          // Add network parameter if specified
           if ( $_GET[ "network" ] ) url += "&network=" + $_GET[ "network" ];
+          
+          // === DISPLAY INSTRUCTIONS TO MAKER ===
+          // Show modal with instructions and taker link
           var content = `
-            <p>Share <a style="color: blue; text-decoration: underline;" href="${url + "&role=taker"}" target="_blank">this link</a> with the taker and wait for their response -- and don't leave this page or they might lose their deposit, just wait for the page to update and tell you what to do next</p>
+            <p>Share the link below with the taker and wait for their response -- and don't leave this page or they might lose their deposit, just wait for the page to update and tell you what to do next.<br/><code>${url + "&role=taker"}</code></p>
           `;
           showModal( content );
+          
+          // Log escrow URL for debugging (escrow gets notified via Nostr tags)
           console.log(url + "&role=escrow&decryption_key=" + ephemeral_priv);
+          
+          // Return the taker URL for programmatic use
           return url + "&role=taker&decryption_key=" + ephemeral_priv;
         }
         function bytesToHex( bytes ) {
@@ -1492,7 +1564,7 @@
                     $$( '.open_dispute' )[ 1 ].onclick = () => {
                         var url = window.location.protocol + "//" + window.location.hostname + window.location.pathname + "?taker=" + pubKey + "&contract=" + $_GET[ "contract" ] + "&role=escrow&decryption_key=" + $_GET[ "decryption_key" ];
                         if ( $_GET[ "network" ] ) url += "&network=" + $_GET[ "network" ];
-                        var content = `<p>Please send <a style="color: blue; text-decoration: underline;" href="${url}" target="_blank">this link</a> to your escrow and await their reply</p>`;
+                        var content = `<p>Please send the link below to your escrow and await their reply.<br/><coce>${url}</code></p>`;
                         showModal( content );
                     }
                 }
@@ -1660,7 +1732,7 @@
               $$( '.open_dispute' )[ 0 ].onclick = () => {
                   var url = window.location.protocol + "//" + window.location.hostname + window.location.pathname + "?taker=" + $_GET[ "taker" ] + "&contract=" + $_GET[ "contract" ] + "&role=escrow&decryption_key=" + $_GET[ "decryption_key" ];
                   if ( $_GET[ "network" ] ) url += "&network=" + $_GET[ "network" ];
-                  var content = `<p>Please send <a style="color: blue; text-decoration: underline;" href="${url}" target="_blank">this link</a> to your escrow and await their reply</p>`;
+                  var content = `<p>Please send the link below to your escrow and await their reply.<br/><code>${url}</code></p>`;
                   showModal( content );
               }
               //previously I (the maker) created a subscription to find the taker's reply to this event
