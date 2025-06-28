@@ -1287,7 +1287,7 @@
                     It is sad that you were unable to send the money to your counterparty yourself, but your counterparty did it for you, so good on them.
                 `;
             }
-            content += `Please use Cowboy Escrow again the next time you need to escrow some money. Toodles!`;
+            content += `Please use Cowboy Escrow again the next time you need to escrow something. Toodles!`;
             showModal( content );
             $$( '.open_dispute' )[ 0 ].style.display = "none";
             $$( '.open_dispute' )[ 1 ].style.display = "none";
@@ -1397,11 +1397,13 @@
         <div class="profile maker_profile" style="display: none; background-color: white; padding: 1rem; margin: 1rem 0.5rem; border-radius: 1rem; max-width: 15rem; text-align: center;">
           <img class="profile_circle"></img>
           <div class="profile_info" style="color: black;"></div>
+          <div class="maker_npub"></div>
           <div><button class="maker_won px-4 py-2 rounded-md bg-blue-500 text-white">Maker won</button></div>
         </div>
         <div class="profile taker_profile" style="display: none; background-color: white; padding: 1rem; margin: 1rem 0.5rem; border-radius: 1rem; max-width: 15rem; text-align: center;">
           <img class="profile_circle"></img>
           <div class="profile_info" style="color: black;"></div>
+          <div class="taker_npub"></div>
           <div><button class="taker_won px-4 py-2 rounded-md bg-blue-500 text-white">Taker won</button></div>
         </div>
       </div>
@@ -1691,9 +1693,11 @@
               $('.escrow_form').style.display = "block";
               $( '.maker_profile .profile_circle' ).src = json[ "maker_pic" ];
               $( '.maker_profile .profile_info' ).innerText = json[ "maker_nym" ];
+              $( '.maker_profile .profile_info' ).innerText = json[ "maker_npub" ];
               $( '.maker_profile' ).style.display = "inline-block";
               $( '.taker_profile .profile_circle' ).src = json[ "taker_pic" ];
               $( '.taker_profile .profile_info' ).innerText = json[ "taker_nym" ];
+              $( '.taker_profile .profile_info' ).innerText = json[ "taker_npub" ];
               $( '.taker_profile' ).style.display = "inline-block";
               // var json = { maker_nsec: "nsec1hd5sm8cjvnttdde9d2pvjv42vj9svcrar728fy8h6l8hwmlvhmkqsvm95u", maker_pub: "npub1yxp7j36cfqws7yj0hkfu2mx25308u4zua6ud22zglxp98ayhh96s8c399s", taker_pub: "npub1yxp7j36cfqws7yj0hkfu2mx25308u4zua6ud22zglxp98ayhh96s8c399s", escrow_pub: "npub1yxp7j36cfqws7yj0hkfu2mx25308u4zua6ud22zglxp98ayhh96s8c399s", maker_sats: 5000, taker_sats: 5000, escrow_sats: 1000, contract_text: "test8", maker_address: "bcrt1q6zpf4gefu4ckuud3pjch563nm7x27u4ruahz3y" }
               //sessionStorage["json"] = JSON.stringify(json);
