@@ -29,11 +29,11 @@ You'll need to gather this information:
 
 ## Project stack
 
-- Nostr for encrypted event publishing
-- Noble Secp256k1 for encryption/decryption and signing
-- Bech32 for npub/nsec encoding
-- BitcoinJS/TaprootJS for Bitcoin script construction and signing
-- TailwindCSS for styling
+- `Nostr` for encrypted event publishing
+- Noble `Secp256k1` for encryption/decryption and signing
+- `Bech32` for npub/nsec encoding
+- `BitcoinJS/TaprootJS` for Bitcoin script construction and signing
+- `TailwindCSS` for styling
 
 ## Setup
 
@@ -41,7 +41,9 @@ You'll need to gather this information:
 
 2. Open `index.html` in your browser to access the app
 
-3. There is no step 3
+3. add `?network=testnet` to switch to Testnet3 network
+
+4. There is no step 4
 
 ## Demo pic
 
